@@ -11,4 +11,4 @@ jobs:
 
     steps:
       - name: Print Message
-        run: echo "GitHub Actions Working Successfully"
+        run: echo "GitHub Actions Working Successfuljly"

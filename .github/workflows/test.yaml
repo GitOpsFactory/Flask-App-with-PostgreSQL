@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test:
@@ -11,4 +12,4 @@ jobs:
 
     steps:
       - name: Print Message
-        run: echo "GitHub Actions Working Successfuljly"
+        run: echo "GitHub Actions Working Successfully"

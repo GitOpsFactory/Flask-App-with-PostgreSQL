@@ -24,4 +24,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: bkuslapur/python-postgres-app:v2
+          tags: bkuslapur/python-postgres-app:v3

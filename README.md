@@ -47,4 +47,5 @@ GitHub Actions	CI/CD
 DockerHub	Image Registry
 Kubernetes	Container Orchestration
 Minikube	Local Kubernetes Cluster
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/92f6e236-0619-474c-bbfb-e0630a43e0ea" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/3b9e5927-ec35-4f9a-a544-6e1a0439123d" />
+

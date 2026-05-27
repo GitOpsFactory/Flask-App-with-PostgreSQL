@@ -1,5 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: python-app
 
@@ -17,11 +18,15 @@ spec:
 
     spec:
       containers:
+
       - name: python-app
-        image: bkuslapur/python-postgres-app:v2
+
+        image: bkuslapur/python-postgres-app:v4
+
         imagePullPolicy: Always
 
         env:
+
         - name: DB_HOST
           value: postgres
 
@@ -32,7 +37,10 @@ spec:
           value: postgres
 
         - name: DB_PASS
-          value: password
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
 
         ports:
         - containerPort: 5000

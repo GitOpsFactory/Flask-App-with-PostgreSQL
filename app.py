@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import psycopg2
 import os
 import socket
@@ -21,72 +21,143 @@ def get_connection():
     )
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def dashboard():
 
     conn = get_connection()
     cur = conn.cursor()
 
-    # Create table
+    # Create table if not exists
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS visits (
+        CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
-            visit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            username TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
-    # Insert visit
-    cur.execute("INSERT INTO visits DEFAULT VALUES")
     conn.commit()
 
-    # Get total visits
-    cur.execute("SELECT COUNT(*) FROM visits")
-    total_visits = cur.fetchone()[0]
+    users = []
 
-    # PostgreSQL version
-    cur.execute("SELECT version()")
-    pg_version = cur.fetchone()[0]
+    if request.method == "POST":
+
+        action = request.form.get("action")
+
+        # SAVE USER
+        if action == "save":
+
+            username = request.form.get("username")
+
+            if username:
+
+                cur.execute(
+                    "INSERT INTO users (username) VALUES (%s)",
+                    (username,)
+                )
+
+                conn.commit()
+
+        # FETCH USERS
+        elif action == "fetch":
+
+            cur.execute("""
+                SELECT id, username, created_at
+                FROM users
+                ORDER BY id DESC
+            """)
+
+            users = cur.fetchall()
+
+    hostname = socket.gethostname()
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    rows = ""
+
+    for user in users:
+
+        rows += f"""
+        <tr>
+            <td>{user[0]}</td>
+            <td>{user[1]}</td>
+            <td>{user[2]}</td>
+        </tr>
+        """
 
     cur.close()
     conn.close()
 
-    hostname = socket.gethostname()
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     html = f"""
+
     <html>
+
     <head>
+
         <title>DevOps Dashboard</title>
 
-        <meta http-equiv="refresh" content="5">
-
         <style>
+
             body {{
                 background-color: #0f172a;
                 color: white;
                 font-family: Arial;
                 text-align: center;
-                padding-top: 50px;
+                padding: 20px;
             }}
 
             .card {{
                 background: #1e293b;
-                width: 600px;
+                width: 900px;
                 margin: auto;
                 padding: 30px;
                 border-radius: 12px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.5);
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
             }}
 
             h1 {{
                 color: #38bdf8;
             }}
 
-            .metric {{
-                font-size: 24px;
-                margin: 20px;
+            input {{
+                padding: 10px;
+                width: 250px;
+                border-radius: 5px;
+                border: none;
+                margin-right: 10px;
             }}
+
+            button {{
+                padding: 10px 20px;
+                margin: 5px;
+                background-color: #38bdf8;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+            }}
+
+            button:hover {{
+                background-color: #0ea5e9;
+            }}
+
+            table {{
+                width: 100%;
+                margin-top: 20px;
+                border-collapse: collapse;
+            }}
+
+            th, td {{
+                border: 1px solid #334155;
+                padding: 12px;
+            }}
+
+            th {{
+                background-color: #334155;
+            }}
+
         </style>
+
     </head>
 
     <body>
@@ -95,32 +166,56 @@ def dashboard():
 
             <h1>🚀 Kubernetes DevOps Dashboard</h1>
 
-            <div class="metric">
-                📦 Pod Name: <b>{hostname}</b>
-            </div>
+            <p>📦 Pod Name: <b>{hostname}</b></p>
 
-            <div class="metric">
-                👥 Total Visits: <b>{total_visits}</b>
-            </div>
+            <p>🕒 Current Time: <b>{current_time}</b></p>
 
-            <div class="metric">
-                🕒 Current Time: <b>{current_time}</b>
-            </div>
+            <p>🗄 PostgreSQL Status: <b>Connected ✅</b></p>
 
-            <div class="metric">
-                🗄 PostgreSQL Status: <b>Connected ✅</b>
-            </div>
+            <form method="POST">
 
-            <div class="metric">
-                🐘 PostgreSQL Version:
-                <br><br>
-                <small>{pg_version}</small>
-            </div>
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Enter Username"
+                >
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="save"
+                >
+                    Save User
+                </button>
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="fetch"
+                >
+                    Fetch Users
+                </button>
+
+            </form>
+
+            <table>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Created At</th>
+                </tr>
+
+                {rows}
+
+            </table>
 
         </div>
 
     </body>
+
     </html>
+
     """
 
     return html

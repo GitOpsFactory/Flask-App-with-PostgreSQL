@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: python-app
-        image: bkuslapur/python-postgres-app:v1
+        image: bkuslapur/python-postgres-app:v2
         imagePullPolicy: Always
 
         env:
